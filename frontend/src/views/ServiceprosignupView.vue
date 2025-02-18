@@ -47,8 +47,8 @@ import router from '../router/index.js'
                     <p>Select Service Type</p>
                     <select class="form-select form-select-sm" v-model ="service_type" aria-label="Small select example">
                         <option value="1">plumber</option>
-                        <option value="2">Two</option>
-                        <option value="3">Three</option>
+                        <option value="2">electrician</option>
+                        <option value="3">AC repair</option>
                     </select>
 
                 </div>

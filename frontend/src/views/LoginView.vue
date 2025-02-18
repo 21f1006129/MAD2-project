@@ -76,6 +76,7 @@ import store from '../store'
                 }
                 return {}
             }).then(x=> {
+                console.log("TTESTT")
                 store.commit("setUser",x);
 
             })

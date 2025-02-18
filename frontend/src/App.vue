@@ -1,18 +1,22 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
 import { RouterLink, RouterView } from 'vue-router'
+import store from "@/store"
 
 </script>
 
 <template>
-  <header>
-
-
       <RouterView/>
-  </header>
-
-
 </template>
+<script>
+
+export default {
+  created(){
+    let user = localStorage.getItem("user");
+    store.commit("setUser", (user) ? JSON.parse(user) : {token: null, roles: []});
+    //console.log(store.state.user,"Banzai");
+  }
+}
+</script>
 
 <style scoped>
 
