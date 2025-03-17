@@ -4,6 +4,8 @@ import SignupView from '@/views/SignupView.vue'
 import ServiceprosignupView from '@/views/ServiceprosignupView.vue'
 import AdminView from '@/views/admin/AdminView.vue'
 import CreateServiceView from '@/views/admin/CreateServiceView.vue'
+import AdminDashboardView from '@/views/admin/AdminDashboardView.vue'
+import ViewServiceView from '@/views/admin/ViewServiceView.vue'
 import store from '@/store'
 
 const router = createRouter({
@@ -32,9 +34,25 @@ const router = createRouter({
       component: AdminView,
       children: [
         {
-          path: 'createservice',
+          path: '',
+          name: 'admin-dashboard',
+          component: AdminDashboardView,
+        },
+        {
+          path: 'service/view',
+          name: 'admin-view-service',
+          component: ViewServiceView,
+        },
+        {
+          path: 'service',
           name: 'admin-create-service',
-          component: CreateServiceView
+          component: CreateServiceView,
+        },
+        {
+          path: 'service/:id',
+          name: 'admin-update-service',
+          props: true,
+          component: CreateServiceView,
         }
       ] 
     }
@@ -46,6 +64,9 @@ router.beforeEach((to) =>{
   if(!store.getters.getRoles.includes('admin') && to.fullPath.startsWith('/admin')){
     router.push('/');
   }
-
+  if(to.fullPath.startsWith("/signout")){
+    store.commit("setUser",{token: null, role:[]});
+    router.push('/');
+  }
 })
 export default router

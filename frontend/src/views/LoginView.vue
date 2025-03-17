@@ -1,6 +1,7 @@
 <script setup >
 import Navbar from '../components/Navbar.vue' 
 import store from '../store'
+import router from '@/router';
 </script>
 
 <template>
@@ -12,6 +13,7 @@ import store from '../store'
              <div class="card-body">
                 <h4 class="'card-title'">Login</h4>
                 <form @submit.prevent="login()">
+                    <p style="color: red;">{{ error['username'] }}</p>
                 <div class="row">
                     <div class="col">
                     <input type="text" class="form-control" v-model="username" placeholder="username" aria-label="username" required>
@@ -74,10 +76,14 @@ import store from '../store'
                         password: "Invalid username or password"
                     }
                 }
-                return {}
+                return {token: null,role:[]}
             }).then(x=> {
                 console.log("TTESTT")
+                console.log(this.error['username'])
                 store.commit("setUser",x);
+                if(x['role'].includes('admin')){
+                    router.push({path:"/admin"})
+                }
 
             })
             }

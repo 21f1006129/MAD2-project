@@ -1,10 +1,10 @@
 <script setup>
     import { RouterView } from "vue-router"
-
+    import AdminNavbar from "@/components/admin/Navbar.vue"
 </script>
 <template>
     <div>
-        <h1>Welcome Admin!</h1>
+        <AdminNavbar/>
         <RouterView/>
     </div>
 

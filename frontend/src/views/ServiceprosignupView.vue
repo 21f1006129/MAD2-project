@@ -39,10 +39,12 @@ import router from '../router/index.js'
                 <p style="color:red;">{{toggle}}</p>
                 <div class="row">
                     <div class="col">
-                    <input type="number" class="form-control" v-model="pincode" placeholder="Enter 6 digit pincode" aria-label="pincode" required>
+                        <input type="text" class="form-control" v-model="pincode"
+                            maxlength="6" minlength="6" pattern="^\d{6}$"
+                            @input="pincode = pincode.replace(/\D/g, '')"
+                            required placeholder="Enter 6-digit pincode">
                     </div>
                 </div>
-                <p style="color: red;">{{ pincheck }}</p>
                 <div class="row">
                     <p>Select Service Type</p>
                     <select class="form-select form-select-sm" v-model ="service_type" aria-label="Small select example">
@@ -52,7 +54,11 @@ import router from '../router/index.js'
                     </select>
 
                 </div>
-                
+                <div class="row">
+                    <div class="col">
+                        <input type="file" class="form-control" @change="handleFileUpload" accept="application/pdf">
+                    </div>
+                </div>
                 <div class="row">
                     <div class="col">
                     <input type="submit" class="btn btn-primary" style="width: 100%;" value="submit">
@@ -82,6 +88,7 @@ import router from '../router/index.js'
                 confirm_password : null,
                 service_type : null,
                 pincode : null,
+                pdfFile:null,
                 error : {
                     username : null,
                     password : null
@@ -92,41 +99,85 @@ import router from '../router/index.js'
             }
         },
         methods:{
-            validate(){
-                console.log(this.username, this.password);
+            validate() {
+                this.message = null;
+                this.message1 = null;
+
+                // Check for empty fields
+                if (!this.fullname || !this.username || !this.password || !this.confirm_password || !this.pincode || !this.service_type) {
+                    this.message1 = 'Please fill all the required fields.';
+                    return false; // Stop form submission
+                }
+
+                // Check if passwords match
+                if (this.password !== this.confirm_password) {
+                    this.message1 = "Passwords don't match.";
+                    return false;
+                }
+
+                // Check if pincode is exactly 6 digits
+                if (String(this.pincode).length !== 6) {
+                    this.message1 = 'Pincode must be 6 digits long.';
+                    return false;
+                }
+
+                // Check if PDF file is uploaded
+                if (!this.pdfFile) {
+                    this.message1 = 'Please upload a PDF file.';
+                    return false;
+                }
+
+                // Optionally check if uploaded file is a PDF (MIME type check)
+                if (this.pdfFile.type !== 'application/pdf') {
+                    this.message1 = 'Uploaded file must be a PDF.';
+                    return false;
+                }
+                return true;
             },
-            signup(){
+            resetForm() {
+                this.fullname = null;
+                this.username = null;
+                this.password = null;
+                this.confirm_password = null;
+                this.pincode = null;
+                this.service_type = null;
+                this.pdfFile = null; 
+            },
+            handleFileUpload(event) {
+                this.pdfFile = event.target.files[0]; 
+                console.log('Selected file:', this.pdfFile);
+            },  
+            signup() {
                 this.validate();
-                fetch(import.meta.env.VITE_BASEURL+'/servicepro-signup',{method:'POST',headers: {"Content-Type":"application/json"},
-                body : JSON.stringify({fullname : this.fullname ,username: this.username, password: this.password, })
-
-                }).then(resp=>{
-
-
-                    return [resp.json(),resp.status]
-                }).then(x=>{
-                    console.log('resp 2',x[1]);
-                    if (x[1]==200){
-                        this.message1 = null;
-                        this.message = 'Signup successful! please Login.';
-                        this.fullname = null;
-                        this.username = null;
-                        this.password = null;
-                        this.confirm_password = null;
-                        router.push({path:"/signup"})
-                    }
-                    else{
-                        this.message = null;
-                        this.message1 = 'Username already exists';
-                        this.fullname = null;
-                        this.username = null;
-                        this.password = null;
-                        this.confirm_password = null;
-                        router.push({path:"/signup"})
-                    }
-                })
                 
-                }  
+                const formData = new FormData();
+                formData.append('fullname', this.fullname);
+                formData.append('username', this.username);
+                formData.append('password', this.password);
+                formData.append('pincode', this.pincode);
+                formData.append('service_type', this.service_type);
+                formData.append('pdfFile', this.pdfFile); 
+
+                fetch(import.meta.env.VITE_BASEURL + '/servicepro-signup', {
+                    method: 'POST',
+                    body: formData 
+                })
+                .then(resp => [resp.json(), resp.status])
+                .then(([data, status]) => {
+                    console.log('Response status:', status);
+                    if (status === 200) {
+                        this.message1 = null;
+                        this.message = 'Signup successful! Please login.';
+                        this.resetForm();
+                        router.push({ path: "/servicepro-signup" });
+                    } else {
+                        this.message = null;
+                        this.message1 = 'Username already exists.';
+                        this.resetForm();
+                        router.push({ path: "/servicepro-signup" });
+                    }
+                });
+            }
         },
         computed:{
             toggle(){
@@ -135,17 +186,15 @@ import router from '../router/index.js'
                 }
                 return "Passwords don't match."
             },
-            pincheck(){
-                return typeof this.pincode
-            }
+
         }
      }
 </script>
 
 <style scoped>
      .container-fluid{
-        width:100%;
-        height:100vh;
+        width:90%;
+        height:110vh;
         overflow: hidden;
         display:flex;
         justify-content: center;

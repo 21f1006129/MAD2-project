@@ -65,8 +65,7 @@ import router from '../router/index.js'
                 password : null,
                 confirm_password : null,
                 error : {
-                    username : null,
-                    password : null
+                    response : null
                 },
                 message : null,
                 message1 : null
@@ -96,6 +95,11 @@ import router from '../router/index.js'
                         this.password = null;
                         this.confirm_password = null;
                         router.push({path:"/signup"})
+                    }
+                    else if (x[1]==400){
+                        this.message1 = null;
+                        this.message = null;
+                        this.error['response'] = 'Invalid form response';
                     }
                     else{
                         this.message = null;
