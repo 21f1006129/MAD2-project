@@ -31,6 +31,12 @@ class RoleUsers(db.Model):
     user_id = db.Column('user_id', db.Integer(), db.ForeignKey(User.id))
     role_id = db.Column('role_id', db.Integer(), db.ForeignKey(Role.id))
 
+class Customer(db.Model):
+    __tablename__='customer'
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(), nullable=False)
+    username = db.Column(db.String(), unique=True, nullable=False)
+    active = db.Column(db.Boolean())
 class Serviceprofessional(db.Model):
     __tablename__='service_professional'
     id = db.Column(db.Integer(), primary_key=True)
@@ -38,9 +44,10 @@ class Serviceprofessional(db.Model):
     username = db.Column(db.String(), unique=True, nullable=False)
     date_created = db.Column(db.DateTime())
     service_type = db.Column(db.String(), nullable=False)
-    experiece = db.Column(db.Integer())
+    experience = db.Column(db.Integer())
     requests_completed = db.Column(db.Integer())
-    cummulative_rating = db.Column(db.Integer())
+    cumulative_rating = db.Column(db.Integer())
+    active = db.Column(db.Boolean())
 
 class Service(db.Model):
     __tablename__='service'

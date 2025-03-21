@@ -76,10 +76,14 @@ import router from '@/router';
                         password: "Invalid username or password"
                     }
                 }
+                else{
+                    this.error = {
+                        username: "This account is temporarily Deactivated"
+                    }
+                }
                 return {token: null,role:[]}
             }).then(x=> {
-                console.log("TTESTT")
-                console.log(this.error['username'])
+                console.log(x['role'])
                 store.commit("setUser",x);
                 if(x['role'].includes('admin')){
                     router.push({path:"/admin"})

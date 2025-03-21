@@ -8,6 +8,8 @@ export default createStore({
                 role: []
             },
             services: [],
+            service_professionals: [],
+            customers: [] 
         }
     },
     mutations:{
@@ -17,6 +19,12 @@ export default createStore({
         },
         setServices(state,value){
             state.services = value;
+        },
+        setServiceProfessionals(state,value){
+            state.service_professionals = value;
+        },
+        setCustomers(state,value){
+            state.customers = value;
         }
     },
     getters: {
@@ -35,10 +43,16 @@ export default createStore({
         },
         getService(state){
             return state.services
+        },
+        getServiceProfessionals(state){
+            return state.service_professionals 
+        },
+        getCustomers(state){
+            return state.customers
         }
     },
     actions: {
-        getServices({commit,state}){
+       getServices({commit,state}){
             fetch(import.meta.env.VITE_BASEURL + "/service", {
                 method: "GET",
                 headers: {
@@ -47,6 +61,30 @@ export default createStore({
                 }
               }).then(response => response.json()).then(x =>{
                 commit("setServices",x)
+
+            } )
+        } ,
+        getServiceProfessionals({commit,state}){
+            fetch(import.meta.env.VITE_BASEURL + "/service_professionals", {
+                method: "GET",
+                headers: {
+                  "Authentication-Token": state.user["token"],
+            
+                }
+              }).then(response => response.json()).then(x =>{
+                commit("setServiceProfessionals",x)
+
+            } )
+        },
+        getCustomers({commit,state}){
+            fetch(import.meta.env.VITE_BASEURL + "/customers", {
+                method: "GET",
+                headers: {
+                  "Authentication-Token": state.user["token"],
+            
+                }
+              }).then(response => response.json()).then(x =>{
+                commit("setCustomers",x)
 
             } )
         }

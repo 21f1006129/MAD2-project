@@ -33,6 +33,14 @@
         </li>
 
         <li class="nav-item">
+          <router-link class="nav-link" to="/admin/service_professionals">Service Professionals</router-link>
+        </li>
+
+        <li class="nav-item">
+          <router-link class="nav-link" to="/admin/customers">Customers</router-link>
+        </li>
+ 
+        <li class="nav-item">
           <router-link class="nav-link" to="/signout">sign out</router-link>
         </li>
       </ul>

@@ -29,7 +29,7 @@ def create_app():
             app.security.datastore.create_role(name='service_professional')
             user  = app.security.datastore.create_user(name = 'thanos',
                                                        username='thanos',
-                                                        password=generate_password_hash('thanos'))
+                                                        password=generate_password_hash('thanos!@#'))
             
             app.security.datastore.add_role_to_user(user, role_admin)
             db.session.commit()

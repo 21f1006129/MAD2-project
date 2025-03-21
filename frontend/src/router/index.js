@@ -6,6 +6,8 @@ import AdminView from '@/views/admin/AdminView.vue'
 import CreateServiceView from '@/views/admin/CreateServiceView.vue'
 import AdminDashboardView from '@/views/admin/AdminDashboardView.vue'
 import ViewServiceView from '@/views/admin/ViewServiceView.vue'
+import ServiceProfessionalsView from '@/views/admin/ServiceProfessionalsView.vue'
+import CustomerView from '@/views/admin/CustomerView.vue'
 import store from '@/store'
 
 const router = createRouter({
@@ -53,7 +55,19 @@ const router = createRouter({
           name: 'admin-update-service',
           props: true,
           component: CreateServiceView,
-        }
+        },
+        {
+          path: 'service_professionals',
+          name: 'admin-view-service_professionals',
+          props: true,
+          component: ServiceProfessionalsView,
+        },
+        {
+          path: 'customers',
+          name: 'admin-view-customers',
+          props: true,
+          component: CustomerView,
+      }
       ] 
     }
   ],

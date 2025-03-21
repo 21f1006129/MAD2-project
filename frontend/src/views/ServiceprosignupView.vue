@@ -28,7 +28,7 @@ import router from '../router/index.js'
                 </div>
                 <div class="row">
                     <div class="col">
-                    <input type="password" class="form-control" v-model="password" placeholder="password" aria-label="password" required>
+                    <input type="password" class="form-control" v-model="password" placeholder="password" aria-label="password" required >
                     </div>
                 </div>
                 <div class="row">
@@ -48,15 +48,15 @@ import router from '../router/index.js'
                 <div class="row">
                     <p>Select Service Type</p>
                     <select class="form-select form-select-sm" v-model ="service_type" aria-label="Small select example">
-                        <option value="1">plumber</option>
-                        <option value="2">electrician</option>
-                        <option value="3">AC repair</option>
+                        <option v-for="(service, index) in store.getters.getService" :key="index" :value="service.name">
+                            {{ service.name }}
+                        </option>
                     </select>
 
                 </div>
                 <div class="row">
                     <div class="col">
-                        <input type="file" class="form-control" @change="handleFileUpload" accept="application/pdf">
+                        <input type="file" ref="pdf_input" class="form-control" @change="handleFileUpload" accept="application/pdf" required>
                     </div>
                 </div>
                 <div class="row">
@@ -80,6 +80,9 @@ import router from '../router/index.js'
 </template>
 <script>
     export default {
+        created(){
+            store.dispatch("getServices")
+        },
         data(){
             return {
                 fullname: null,
@@ -142,6 +145,7 @@ import router from '../router/index.js'
                 this.pincode = null;
                 this.service_type = null;
                 this.pdfFile = null; 
+                this.$refs.pdf_input.value = null;
             },
             handleFileUpload(event) {
                 this.pdfFile = event.target.files[0]; 
@@ -165,14 +169,22 @@ import router from '../router/index.js'
                 .then(resp => [resp.json(), resp.status])
                 .then(([data, status]) => {
                     console.log('Response status:', status);
+                    console.log(data['message'])
                     if (status === 200) {
                         this.message1 = null;
                         this.message = 'Signup successful! Please login.';
+                        this.pdfFile = null;
                         this.resetForm();
                         router.push({ path: "/servicepro-signup" });
-                    } else {
+                    } else if (status ===409) {
                         this.message = null;
-                        this.message1 = 'Username already exists.';
+                        this.message1 = 'Username already Exists.';
+                        this.resetForm();
+                        router.push({ path: "/servicepro-signup" });
+                    
+                    }else {
+                        this.message = null;
+                        this.message1 = 'Invalid Form Response';
                         this.resetForm();
                         router.push({ path: "/servicepro-signup" });
                     }
