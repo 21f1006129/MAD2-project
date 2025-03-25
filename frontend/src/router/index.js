@@ -8,6 +8,13 @@ import AdminDashboardView from '@/views/admin/AdminDashboardView.vue'
 import ViewServiceView from '@/views/admin/ViewServiceView.vue'
 import ServiceProfessionalsView from '@/views/admin/ServiceProfessionalsView.vue'
 import CustomerView from '@/views/admin/CustomerView.vue'
+import SearchServiceView from '@/views/user/SearchServiceView.vue'
+import UserView from '@/views/user/UserView.vue'
+import BookServiceView from '@/views/user/BookServiceView.vue'
+import UserDashboardView from '@/views/user/UserDashboardView.vue'
+import ServiceProfessionalDashboardView from '@/views/serviceprofessional/ServiceProfessionalDashboardView.vue'
+import ServiceProfessionalView from '@/views/serviceprofessional/ServiceProfessionalView.vue'
+import RateServiceView from '@/views/user/RateServiceView.vue'
 import store from '@/store'
 
 const router = createRouter({
@@ -59,16 +66,55 @@ const router = createRouter({
         {
           path: 'service_professionals',
           name: 'admin-view-service_professionals',
-          props: true,
           component: ServiceProfessionalsView,
         },
         {
           path: 'customers',
           name: 'admin-view-customers',
-          props: true,
           component: CustomerView,
       }
       ] 
+    },
+    {
+      path: '/user',
+      name: "user-view",
+      component: UserView,
+      children: [
+        {
+          path: '',
+          name: 'user-dashboard',
+          component: UserDashboardView,
+        },
+        {
+          path: 'search',
+          name: 'user-search-service',
+          component: SearchServiceView,
+        },
+        {
+          path: 'book/:id',
+          name: 'user-book-service',
+          props: true,
+          component: BookServiceView,
+        },
+        {
+          path: 'feedback/:id',
+          name: 'user-feedback-service',
+          props: true,
+          component: RateServiceView,
+        },
+      ]
+    },
+    {
+      path: '/service_professional',
+      name: "service_professional-view",
+      component: ServiceProfessionalView,
+      children:[
+        {
+          path: '',
+          name: 'service_professional-dashboard',
+          component: ServiceProfessionalDashboardView,
+        },
+      ]
     }
   ],
 })
@@ -76,6 +122,12 @@ const router = createRouter({
 
 router.beforeEach((to) =>{
   if(!store.getters.getRoles.includes('admin') && to.fullPath.startsWith('/admin')){
+    router.push('/');
+  }
+  if(!store.getters.getRoles.includes('user') && to.fullPath.startsWith('/user')){
+    router.push('/');
+  }
+  if(!store.getters.getRoles.includes('service_professional') && to.fullPath.startsWith('/service_professional')){
     router.push('/');
   }
   if(to.fullPath.startsWith("/signout")){

@@ -48,7 +48,7 @@ import router from '../router/index.js'
                 <div class="row">
                     <p>Select Service Type</p>
                     <select class="form-select form-select-sm" v-model ="service_type" aria-label="Small select example">
-                        <option v-for="(service, index) in store.getters.getService" :key="index" :value="service.name">
+                        <option v-for="(service, index) in store.getters.getServices" :key="index" :value="service.name">
                             {{ service.name }}
                         </option>
                     </select>

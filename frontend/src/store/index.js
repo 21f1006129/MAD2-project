@@ -41,7 +41,7 @@ export default createStore({
             }
             return null;
         },
-        getService(state){
+        getServices(state){
             return state.services
         },
         getServiceProfessionals(state){

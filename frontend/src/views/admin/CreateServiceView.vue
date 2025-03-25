@@ -49,7 +49,7 @@ import router from "@/router";
                 </div>
                 <div class="row">
                     <div class="col">
-                    <input type="number" min="100" max="10000" class="form-control" v-model="editbaseprice" placeholder="baseprice" aria-label="baseprice" >
+                    <input type="number" min="100" max="10000" class="form-control" v-model="editbaseprice" placeholder="baseprice" aria-label="baseprice"  required>
                     </div>
                 </div>
                 <div class="row">
@@ -73,7 +73,7 @@ export default {
             servicename: null,
             description: null,
             baseprice: null,
-            editservicename: 'default',
+            editservicename: null,
             editdescription:null,
             editbaseprice:null,
             error:{
@@ -94,13 +94,13 @@ export default {
         store.dispatch("getServices");
     },
     computed: {
-  service() {
-     const services = this.$store.getters.getService; 
+        service() {
+     const services = this.$store.getters.getServices; 
      for (let i = 0; i < services.length; i++) {
        if (services[i]['id'] === parseInt(this.id)) { 
          return services[i];
        }
-     }
+     };
      return null; 
   }
 },
@@ -140,6 +140,9 @@ export default {
             }).then(x =>{
                 if(x.status == 200){
                     router.push("/admin/service/view")
+                }
+                else{
+                    this.error_message = "No Service with this id was found"
                 }
             })
 

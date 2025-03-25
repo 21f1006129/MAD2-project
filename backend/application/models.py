@@ -42,12 +42,14 @@ class Serviceprofessional(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(), nullable=False)
     username = db.Column(db.String(), unique=True, nullable=False)
+    pincode = db.Column(db.Integer())
     date_created = db.Column(db.DateTime())
     service_type = db.Column(db.String(), nullable=False)
     experience = db.Column(db.Integer())
     requests_completed = db.Column(db.Integer())
     cumulative_rating = db.Column(db.Integer())
     active = db.Column(db.Boolean())
+    requests_on_date = db.relationship('Servicerequest', backref='professional', lazy=True)
 
 class Service(db.Model):
     __tablename__='service'
@@ -59,10 +61,16 @@ class Service(db.Model):
 class Servicerequest(db.Model):
     __tablename__ = 'service_request'
     id = db.Column(db.Integer(), primary_key=True)
-    service_id = db.Column('service_id',db.Integer(), db.ForeignKey(Service.id))
-    customer_id = db.Column('customer_id',db.Integer(), db.ForeignKey(User.id))
-    professional_id = db.Column('professional_id',db.Integer(), db.ForeignKey(Serviceprofessional.id))
-    date_of_request = db.Column(db.DateTime())
-    date_of_completion = db.Column(db.DateTime())
-    service_status = db.Column(db.String())
+    service_id  = db.Column('service_id',db.Integer(), db.ForeignKey(Service.id))
+    service_name  = db.Column('service_name',db.String(), db.ForeignKey(Service.name))
+    user_id = db.Column('user_id',db.Integer(), db.ForeignKey(User.id))
+    professional_id = db.Column('professional_id',db.Integer(), db.ForeignKey(Serviceprofessional.id),nullable=True)
+    total_amount = db.Column(db.Integer())
+    address = db.Column(db.String(200))
+    pincode = db.Column(db.Integer())
+    date_of_request = db.Column(db.Date())
+    date_of_completion = db.Column(db.Date())
+    service_status = db.Column(db.String(),default="pending")
+    rejected_by = db.Column(db.JSON(), default=list)
+    rating = db.Column(db.Integer())
     feedback = db.Column(db.String(200))

@@ -13,7 +13,7 @@
     </tr>
   </thead>
   <tbody>
-    <tr v-for="(service,index) in store.getters.getService" :key="index">
+    <tr v-for="(service,index) in store.getters.getServices" :key="index">
       <th scope="row">{{ index+1 }}</th>
       <td>{{service['name']}}</td>
       <td>{{service['price']}}</td>

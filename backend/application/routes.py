@@ -1,7 +1,7 @@
 from flask import current_app as app
 from flask import Blueprint, request
-from flask_security import login_user,auth_required,roles_required
-from .models import db, User, Service, Serviceprofessional, Customer
+from flask_security import login_user,auth_required,roles_required,roles_accepted,current_user
+from .models import db, User, Service, Serviceprofessional, Customer, Servicerequest
 from werkzeug.security import check_password_hash, generate_password_hash
 import json
 import os
@@ -60,7 +60,8 @@ def signup():
                                               username = username,
                                               password = generate_password_hash(password))
     customer = Customer(name = fullname,
-                        username = username)
+                        username = username,
+                        active = 1)
     user_role = app.security.datastore.find_role('user')
     app.security.datastore.add_role_to_user(user, user_role)
 
@@ -109,6 +110,7 @@ def servicepro_signup():
     service_pro = Serviceprofessional(
         name=fullname,
         username=username,
+        pincode = pincode,
         service_type=service_type,
         date_created=datetime.datetime.now(),  
         experience=0,                    
@@ -177,6 +179,8 @@ def update_service():
     if not baseprice:
         return {'message':'Invalid response'}, 400
     service = Service.query.filter_by(id=id).first()
+    if not service:
+        return {'message': 'No service with this id was found'}, 400
     service.name = servicename
     service.description = description
     service.price = baseprice
@@ -198,7 +202,7 @@ def delete_service(service_id):
 
 @api.route("/service_professionals", methods=["GET"])
 @auth_required("token")
-@roles_required("admin")
+@roles_accepted("admin","user")
 def get_serviceprofessionals():
     result = []
     for service_professional in Serviceprofessional.query.all():
@@ -206,6 +210,7 @@ def get_serviceprofessionals():
             "id":service_professional.id,
             "name": service_professional.name,
             "service_type": service_professional.service_type,
+            "pincode": service_professional.pincode,
             "cumulative_rating": service_professional.cumulative_rating,
             "active":service_professional.active
         }) 
@@ -260,3 +265,184 @@ def toggle_customer_status(id):
 
     db.session.commit()  # Save changes
     return json.dumps({"message": "Status updated successfully", "active": customer.active}), 200
+
+
+#Get service requests
+@api.route("/service_requests/professional", methods=["GET"])
+@auth_required("token")
+@roles_required("service_professional")
+def get_professional_requests():
+    service_professional = Serviceprofessional.query.filter_by(username=current_user.username).first()
+    requests = Servicerequest.query.filter_by(professional_id=service_professional.id).all()
+    
+    result = []
+    for req in requests:
+        result.append({
+            "id": req.id,
+            "service_name": req.service_name,
+            "date_of_request": req.date_of_request,
+            "address": req.address,
+            "pincode": req.pincode,
+            "service_status": req.service_status,
+            "feedback": req.feedback
+        })
+    return (result), 200
+
+
+#Booking a Service
+
+@api.route("/book_service", methods=["POST"])
+@auth_required("token")
+@roles_required("user")
+def book_service():
+
+    service_type = request.json.get("service_name")
+    date = request.json.get("date")
+    address = request.json.get("address")
+    pincode = request.json.get("pincode")
+    total_amount = request.json.get("total_amount")
+    user_id = current_user.id
+
+    # Find available professionals
+    professionals = Serviceprofessional.query.filter_by(pincode=pincode, service_type=service_type).all()
+
+    if not professionals:
+        return json.dumps({"message": "No service professionals available in this area."}), 409
+
+    # Sort by least assignments for the selected date
+    professionals.sort(key=lambda p: len([r for r in p.requests_on_date if str(r.date_of_request) == str(date)]))
+
+    for professional in professionals:
+        if professional.active:
+            service_request = Servicerequest(
+                service_id=Service.query.filter_by(name=service_type).first().id,
+                service_name = service_type,
+                professional_id=professional.id,
+                user_id=user_id,
+                date_of_request=datetime.datetime.strptime(date, "%Y-%m-%d").date(),
+                total_amount = total_amount,
+                address = address,
+                pincode = pincode
+            )
+            db.session.add(service_request)
+            db.session.commit()
+            return json.dumps({"message": f"Assigned to {professional.name}", "request_id": service_request.id}), 200
+
+    return json.dumps({"message": "All professionals rejected or unavailable. Please try another date."}), 400
+
+# Service professional Rejecting a service
+@api.route("/reject_service/<int:request_id>", methods=["PATCH"])
+@auth_required("token")
+@roles_required("service_professional")
+def reject_service(request_id):
+    request_entry = Servicerequest.query.get(request_id)
+    if not request_entry:
+        return json.dumps({"message": "Request not found"}), 404
+
+    # Add current professional ID to rejected_by list
+    service_professional = Serviceprofessional.query.filter_by(username=current_user.username).first()
+    updated_rejected_list = request_entry.rejected_by + [service_professional.id]  # ✅ Create a new list
+    request_entry.rejected_by = updated_rejected_list
+    #request_entry.rejected_by.append(service_professional.id)
+    db.session.commit()
+
+    return reassign_service(request_entry)
+
+def reassign_service(request_entry):
+    print(request_entry.rejected_by)
+    pincode = request_entry.pincode
+    service_name = request_entry.service_name
+    date = request_entry.date_of_request
+    # Get all professionals in the same pincode & service type
+    professionals = Serviceprofessional.query.filter_by(pincode=pincode, service_type=service_name).all()
+
+    # Sort by least requests and exclude those who rejected
+    professionals = sorted(professionals, key=lambda p: len([r for r in p.requests_on_date if r.date_of_request == date]))
+    available_professionals = [p for p in professionals if p.id not in request_entry.rejected_by and p.active]
+    if available_professionals:
+        new_professional = available_professionals[0]  # Pick the least busy available professional
+        request_entry.professional_id = new_professional.id
+        request_entry.status = "pending"  # Set status back to pending
+        db.session.commit()
+        return json.dumps({"message": f"Reassigned to {new_professional.name}", "professional_id": new_professional.id}), 200
+    else:
+        request_entry.professional_id = None
+        db.session.commit()
+
+    # If no professionals left, notify customer
+    return json.dumps({"message": "All professionals rejected this request."}), 400
+
+@api.route("/service_requests/user", methods=["GET"])
+@auth_required("token")
+@roles_required("user")
+def get_user_requests():
+    requests = Servicerequest.query.filter_by(user_id=current_user.id).all()
+    
+    result = []
+    for req in requests:
+        result.append({
+            "id": req.id,
+            "service_name": req.service_name,
+            "professional_id":req.professional_id,
+            "date_of_request": req.date_of_request,
+            "address": req.address,
+            "pincode": req.pincode,
+            "service_status": req.service_status,
+            "feedback": req.feedback
+        })
+    return (result), 200
+
+@api.route("/close-service/<int:request_id>", methods=["PATCH"])
+@auth_required("token")
+@roles_required("user")
+def close_service(request_id):
+    request_entry = Servicerequest.query.get(request_id)
+    if not request_entry:
+        return json.dumps({"message": "Request not found"}), 404
+
+    request_entry.service_status = "completed"
+    db.session.commit()
+
+    return json.dumps({"message": "Service request marked as completed."}), 200
+
+
+@api.route("/delete_service_request/<int:request_id>", methods=["DELETE"])
+@auth_required("token")
+@roles_required("user")
+def delete_service_request(request_id):
+    request_entry = Servicerequest.query.get(request_id)
+    if not request_entry:
+        return json.dumps({"message": "Request not found"}), 404
+
+    db.session.delete(request_entry)
+    db.session.commit()
+
+    return json.dumps({"message": "Service request deleted. Please book again."}), 200
+
+@api.route("/service_request/<int:request_id>", methods=["GET"])
+@auth_required("token")
+@roles_required("user")
+def get_service_request(request_id):
+    request = Servicerequest.query.get(request_id)
+    if not request:
+        return json.dumps({"message": "Request not found"}), 404
+
+    return ({
+        "id": request.id,
+        "service_name": request.service_name
+    }), 200
+
+@api.route("/submit-feedback/<int:request_id>", methods=["PATCH"])
+@auth_required("token")
+@roles_required("user")
+def submit_feedback(request_id):
+    request_entry = Servicerequest.query.get(request_id)
+    if not request_entry:
+        return json.dumps({"message": "Request not found"}), 404
+
+    data = request.json
+    request_entry.feedback = data.get("feedback", "")
+    request_entry.rating = data.get("rating", None)
+
+    db.session.commit()
+    return json.dumps({"message": "Feedback submitted successfully."}), 200

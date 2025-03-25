@@ -1,7 +1,7 @@
 <script setup>
-    import { RouterLink } from 'vue-router';
-</script>
+      import { RouterLink } from 'vue-router';
 
+</script>
 <template>
     <nav class="navbar navbar-expand-lg bg-body-tertiary">
   <div class="container-fluid">
@@ -11,17 +11,16 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav">
-        <!-- <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="#">Home</a>
-        </li> -->
         <li class="nav-item">
-          <router-link class="nav-link" to="/">Login</router-link>
+          <router-link class="nav-link" to="/user">Home</router-link>
         </li>
+
         <li class="nav-item">
-          <router-link class="nav-link" to="/signup">Signup</router-link>
+          <router-link class="nav-link" to="/user/search">Book Service</router-link>
         </li>
+ 
         <li class="nav-item">
-          <router-link class="nav-link" to="/servicepro-signup">Service Professional Signup</router-link>
+          <router-link class="nav-link" to="/signout">sign out</router-link>
         </li>
       </ul>
     </div>

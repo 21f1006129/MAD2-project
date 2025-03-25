@@ -87,6 +87,10 @@ import router from '@/router';
                 store.commit("setUser",x);
                 if(x['role'].includes('admin')){
                     router.push({path:"/admin"})
+                } else if (x['role'].includes('user')){
+                    router.push({path:"/user"})
+                } else {
+                    router.push({path:"/service_professional"})
                 }
 
             })
