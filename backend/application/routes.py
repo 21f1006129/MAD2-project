@@ -9,6 +9,7 @@ import datetime
 
 from application.models import db, User, Service, Serviceprofessional, Customer, Servicerequest
 from application.worker import export_csv
+from application.cache import cache
 from celery.result import AsyncResult
 
 api = Blueprint('api',__name__)
@@ -132,7 +133,9 @@ def servicepro_signup():
     return json.dumps({'message': 'Service professional signup successful!'}), 200
 
 ### Read Service API ###
+
 @api.route("/service", methods=["GET"])
+@cache.cached(30)
 def get_service():
     result = []
     for service in Service.query.all():
@@ -209,6 +212,7 @@ def delete_service(service_id):
 @api.route("/service_requests/all", methods=["GET"])
 @auth_required("token")
 @roles_required("admin")
+@cache.cached(30)
 def get_admin_service_requests():
     requests = Servicerequest.query.all()
     
@@ -227,6 +231,7 @@ def get_admin_service_requests():
 @api.route("/service_professionals", methods=["GET"])
 @auth_required("token")
 @roles_accepted("admin","user")
+@cache.cached(30)
 def get_service_professionals():
     result = []
     for service_professional in Serviceprofessional.query.all():

@@ -7,7 +7,9 @@ from werkzeug.security import generate_password_hash
 from flask_cors import CORS
 
 from application.worker import daily_reminder, monthly_reminder
+from application.cache import cache
 from celery.schedules import crontab
+
 
 def create_app():
     app = Flask(__name__)
@@ -19,6 +21,8 @@ def create_app():
 
     db.init_app(app)
     CORS(app)
+    cache.init_app(app)
+
 
     user_datastore = SQLAlchemyUserDatastore(db, User, Role)
     app.security = Security(app, user_datastore)
