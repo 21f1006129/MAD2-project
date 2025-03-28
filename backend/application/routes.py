@@ -231,7 +231,6 @@ def get_admin_service_requests():
 @api.route("/service_professionals", methods=["GET"])
 @auth_required("token")
 @roles_accepted("admin","user")
-@cache.cached(30)
 def get_service_professionals():
     result = []
     for service_professional in Serviceprofessional.query.all():

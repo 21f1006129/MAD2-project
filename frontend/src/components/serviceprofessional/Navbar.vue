@@ -16,10 +16,6 @@
         </li>
 
         <li class="nav-item">
-          <router-link class="nav-link" to="/service_professional/summary">Summary</router-link>
-        </li>
- 
-        <li class="nav-item">
           <router-link class="nav-link" to="/signout">sign out</router-link>
         </li>
       </ul>
