@@ -3,6 +3,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import  MIMEText
 from jinja2 import Template
+from datetime import datetime,timedelta
 import time
 import os
 from csv import DictWriter
@@ -54,6 +55,13 @@ def monthly_reminder():
     usernames = {customer.username for customer in customers}
 
     users = User.query.filter(User.username.in_(usernames)).all()
+
+    today = datetime.today()
+    first_day_of_current_month = today.replace(day=1)
+
+    first_day_of_last_month = (first_day_of_current_month - timedelta(days=1)).replace(day=1)
+
+    last_day_of_last_month = first_day_of_current_month - timedelta(days=1)
     for user in users:
         email = MIMEMultipart()
         email["To"] = user.username
@@ -61,9 +69,13 @@ def monthly_reminder():
         email["Subject"] = f"Monthly Report - {user.name}"
 
         pending_requests = Servicerequest.query.filter(Servicerequest.user_id == user.id,
+                                                       Servicerequest.date_of_request >= first_day_of_last_month,
+                                                       Servicerequest.date_of_request <= last_day_of_last_month,
                                                        Servicerequest.service_status != "completed").all()
         
         completed_requests = Servicerequest.query.filter(Servicerequest.user_id == user.id,
+                                                         Servicerequest.date_of_request >= first_day_of_last_month,
+                                                         Servicerequest.date_of_request <= last_day_of_last_month,
                                                          Servicerequest.service_status == "completed").all()
         total_requests ={
             "Requested": len(pending_requests),
