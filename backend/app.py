@@ -69,8 +69,8 @@ def setup_periodic_tasks(sender, **kwargs):
         daily_reminder.s(),
         name="Daily Reminder Task",
     )
-    sender.add_periodic_task(20,
-        #crontab(day_of_month=1,hour=7,minute=0),  
+    sender.add_periodic_task(
+        crontab(day_of_month=1,hour=7,minute=0),  
         monthly_reminder.s(),
         name="Monthly Reminder Task",
     )
