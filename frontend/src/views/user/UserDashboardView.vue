@@ -23,7 +23,7 @@ export default {
             .then(response => response.json())
             .then(data => {
                 //  Filter requests based on status
-                this.pendingRequests = data.filter(req => req.service_status === "pending");
+                this.pendingRequests = data.filter(req => req.service_status === "pending" || req.service_status === "assigned");
                 this.completedRequests = data.filter(req => req.service_status === "completed");
             })
             .catch(error => console.error("Error fetching service requests:", error));
@@ -72,7 +72,7 @@ export default {
             .then(response => response.json())
             .then(data => {
                 alert(data.message);
-                this.fetchServiceRequests(); // ✅ Refresh table after deletion
+                this.fetchServiceRequests(); //  Refresh table after deletion
             })
             .catch(error => {
                 console.error("Error canceling request:", error);

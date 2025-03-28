@@ -21,7 +21,7 @@
           <th scope="row">{{ index+1 }}</th>
           <td>{{service_professional['name']}}</td>
           <td>{{service_professional['service_type']}}</td>
-          <td>{{ service_professional['cumulative_rating'] }}</td>
+          <td>{{ Number(service_professional['cumulative_rating']).toFixed(2) }}</td>
           <td>{{ service_professional['active'] === false ? 'Not Active' : 'Active' }}</td>
           <td>
             <button :class="service_professional['active'] === false ? 'btn btn-success' : 'btn btn-danger'"

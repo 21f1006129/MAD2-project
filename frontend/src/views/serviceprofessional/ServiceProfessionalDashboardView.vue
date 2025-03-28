@@ -5,6 +5,7 @@ export default {
     data() {
         return {
             pendingRequests: [],
+            assignedRequests: [],
             completedRequests: [],
         };
     },
@@ -22,10 +23,30 @@ export default {
             .then(response => response.json())
             .then(data => {
                 this.pendingRequests = data.filter(req => req.service_status === "pending");
+                this.assignedRequests = data.filter(req => req.service_status === "assigned");
                 this.completedRequests = data.filter(req => req.service_status === "completed");
             })
             .catch(error => console.error("Error fetching service requests:", error));
         },
+
+        acceptRequest(id) {
+            fetch(import.meta.env.VITE_BASEURL+`/accept_service/${id}`, {
+                method: "PATCH",
+                headers: {
+                    "Authentication-Token": store.getters.getToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data.message);
+                this.fetchServiceRequests(); 
+            })
+            .catch(error => {
+                console.error("Error accepting request:", error);
+                alert("Error accepting request. Please try again.");
+            });
+        },
+
         rejectRequest(id) {
             fetch(import.meta.env.VITE_BASEURL+`/reject_service/${id}`, {
                 method: "PATCH",
@@ -73,6 +94,9 @@ export default {
                         <td>{{ request.address }}</td>
                         <td>{{ request.pincode }}</td>
                         <td>
+                            <button class="btn btn-success" @click="acceptRequest(request.id)">
+                                Accept
+                            </button>
                             <button class="btn btn-danger" @click="rejectRequest(request.id)">
                                 Reject
                             </button>
@@ -82,6 +106,38 @@ export default {
             </table>
         </div>
         <p v-else>No pending requests yet.</p>
+
+        <!-- Assigned Service Requests Table -->
+        <div v-if="assignedRequests.length > 0">
+            <h2>Assigned Service Requests</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Service Name</th>
+                        <th>Date</th>
+                        <th>Address</th>
+                        <th>Pincode</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(request, index) in assignedRequests" :key="request.id">
+                        <td>{{ index + 1 }}</td>
+                        <td>{{ request.service_name }}</td>
+                        <td>{{ request.date_of_request }}</td>
+                        <td>{{ request.address }}</td>
+                        <td>{{ request.pincode }}</td>
+                        <td>
+                            <button class="btn btn-danger" @click="rejectRequest(request.id)">
+                                Reject
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p v-else>No assigned requests yet.</p>
 
         <!-- Completed Service Requests Table -->
         <div v-if="completedRequests.length > 0">
@@ -129,6 +185,14 @@ export default {
     color: white;
     border: none;
     padding: 5px 10px;
+    cursor: pointer;
+}
+.btn-success {
+    background-color: green;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    margin-right: 5px;
     cursor: pointer;
 }
 </style>

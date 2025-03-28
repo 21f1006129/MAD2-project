@@ -1,16 +1,22 @@
 from flask import current_app as app
-from flask import Blueprint, request
+from flask import Blueprint, request, send_file
 from flask_security import login_user,auth_required,roles_required,roles_accepted,current_user
-from .models import db, User, Service, Serviceprofessional, Customer, Servicerequest
 from werkzeug.security import check_password_hash, generate_password_hash
+from io import BytesIO
 import json
 import os
 import datetime
+
+from application.models import db, User, Service, Serviceprofessional, Customer, Servicerequest
+from application.worker import export_csv
+from celery.result import AsyncResult
 
 api = Blueprint('api',__name__)
 
 
 ### Login api Implementation ###
+
+
 @api.route("/signin",methods = ['POST'])
 def signin():
     username = request.json.get('username')
@@ -200,10 +206,28 @@ def delete_service(service_id):
     db.session.commit()
     return {'message':"Successfully Deleted"}, 200
 
+@api.route("/service_requests/all", methods=["GET"])
+@auth_required("token")
+@roles_required("admin")
+def get_admin_service_requests():
+    requests = Servicerequest.query.all()
+    
+    result = []
+    for req in requests:
+        result.append({
+            "id": req.id,
+            "service_name": req.service_name,
+            "user_id":req.user_id,
+            "professional_id":req.professional_id,
+            "date_of_request": req.date_of_request,
+            "service_status": req.service_status
+        })
+    return (result), 200
+
 @api.route("/service_professionals", methods=["GET"])
 @auth_required("token")
 @roles_accepted("admin","user")
-def get_serviceprofessionals():
+def get_service_professionals():
     result = []
     for service_professional in Serviceprofessional.query.all():
         result.append({
@@ -330,7 +354,21 @@ def book_service():
 
     return json.dumps({"message": "All professionals rejected or unavailable. Please try another date."}), 400
 
-# Service professional Rejecting a service
+# Service professional Accepts a service request
+@api.route("/accept_service/<int:request_id>", methods=["PATCH"])
+@auth_required("token")
+@roles_required("service_professional")
+def accept_service(request_id):
+    request_entry = Servicerequest.query.get(request_id)
+    if not request_entry:
+        return json.dumps({"message": "Request not found"}), 404
+
+    request_entry.service_status = "assigned"
+    db.session.commit()
+
+    return json.dumps({"message": "Service request accepted."}), 200
+
+# Service professional Rejecting a service request
 @api.route("/reject_service/<int:request_id>", methods=["PATCH"])
 @auth_required("token")
 @roles_required("service_professional")
@@ -341,9 +379,9 @@ def reject_service(request_id):
 
     # Add current professional ID to rejected_by list
     service_professional = Serviceprofessional.query.filter_by(username=current_user.username).first()
-    updated_rejected_list = request_entry.rejected_by + [service_professional.id]  # ✅ Create a new list
+    updated_rejected_list = request_entry.rejected_by + [service_professional.id]  # Create a new list
     request_entry.rejected_by = updated_rejected_list
-    #request_entry.rejected_by.append(service_professional.id)
+    request_entry.service_status = "pending"
     db.session.commit()
 
     return reassign_service(request_entry)
@@ -401,6 +439,7 @@ def close_service(request_id):
         return json.dumps({"message": "Request not found"}), 404
 
     request_entry.service_status = "completed"
+    request_entry.date_of_completion = datetime.date.today() 
     db.session.commit()
 
     return json.dumps({"message": "Service request marked as completed."}), 200
@@ -440,9 +479,36 @@ def submit_feedback(request_id):
     if not request_entry:
         return json.dumps({"message": "Request not found"}), 404
 
-    data = request.json
-    request_entry.feedback = data.get("feedback", "")
-    request_entry.rating = data.get("rating", None)
-
+    request_entry.feedback = request.json.get("feedback", "")
+    request_entry.rating = request.json.get("rating", None)
+    service_professional = Serviceprofessional.query.get(request_entry.professional_id)
+    num_of_requests = service_professional.requests_completed
+    cumulative_rating = service_professional.cumulative_rating
+    service_professional.cumulative_rating = ((num_of_requests*cumulative_rating)+int(request_entry.rating))/(num_of_requests+1)
+    service_professional.requests_completed = service_professional.requests_completed+1
     db.session.commit()
     return json.dumps({"message": "Feedback submitted successfully."}), 200
+
+
+#### CELERY EXPORT CSV TASK ######
+@api.route("/export")
+def export():
+    task = export_csv.delay()
+    return {"id": task.id}
+
+
+@api.route("/export/<string:tid>/status")
+def export_status(tid):
+    result = AsyncResult(tid)
+    return {"status": result.status}
+
+
+@api.route("/export/<string:tid>")
+def export_download(tid):
+    result = AsyncResult(tid)
+    file = BytesIO(result.result.encode())
+    return send_file(file, 
+                     "text", 
+                     as_attachment=True, 
+                     download_name="export.csv")
+

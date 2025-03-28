@@ -4,7 +4,6 @@
 </script>
 <template>
     <div class="billing-container">
-        <p style="color: red;"><strong>{{ error }}</strong></p>
         <h1>Billing Details</h1>
         <div class="bill">
             <p><strong>Service:</strong> {{ service_name }}</p>
@@ -38,7 +37,6 @@ export default {
     props: ['id'],
     data() {
         return {
-            error: null,
             service_name: null,
             service_price: null,
             date: new Date().toISOString().split('T')[0], 
@@ -93,9 +91,10 @@ export default {
                 return [resp.json(),resp.status]
             }).then(x=>{
                 if(x[1]==200){
+                    alert("Booking Successful.")
                     router.push(`/user`);
                 }else{
-                    this.error = "No professional available in your area."
+                    alert("No Professionals available in this area.")
                     router.push(`/user/book/${id}`);
                 }
 

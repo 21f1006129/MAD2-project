@@ -39,7 +39,11 @@
         <li class="nav-item">
           <router-link class="nav-link" to="/admin/customers">Customers</router-link>
         </li>
- 
+
+        <li class="nav-item">
+                <p class="nav-link" href="#" @click="export_file()">Export</p>
+        </li>
+
         <li class="nav-item">
           <router-link class="nav-link" to="/signout">sign out</router-link>
         </li>
@@ -48,3 +52,37 @@
   </div>
 </nav>
 </template>
+
+<script>
+  export default {
+    data(){
+      return {
+        export_id: null,
+      }
+    },
+    methods:{
+      export_file(){
+        fetch(import.meta.env.VITE_BASEURL+"/export").then(x =>{
+          return x.json()
+        }).then(x =>{
+          this.export_id = x["id"]
+          setTimeout(()=> this.export_status(this.export_id), 2000)
+        })
+      },
+      export_status(id){
+        fetch(import.meta.env.VITE_BASEURL+"/export/"+id+"/status").then(x =>{
+          return x.json()
+        }).then(x =>{
+        
+          if(x["status"] == "SUCCESS"){
+            open(import.meta.env.VITE_BASEURL+`/export/${id}`)
+          }
+          else{
+            setTimeout(()=> this.export_status(this.export_id), 2000)
+          }
+
+        })
+      }
+    }
+  }
+</script>
