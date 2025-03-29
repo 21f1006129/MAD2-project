@@ -46,6 +46,23 @@ export default {
                 alert("Error accepting request. Please try again.");
             });
         },
+        closeRequest(id) {
+            fetch(import.meta.env.VITE_BASEURL+`/close_service/${id}`, {
+                method: "PATCH",
+                headers: {
+                    "Authentication-Token": store.getters.getToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                this.fetchServiceRequests(); 
+            })
+            .catch(error => {
+                console.error("Error closing service request:", error);
+                alert("Error closing service request. Please try again.");
+            });
+        },
 
         rejectRequest(id) {
             fetch(import.meta.env.VITE_BASEURL+`/reject_service/${id}`, {
@@ -72,7 +89,6 @@ export default {
     <div class="dashboard-container">
         <h1>Service Professional Dashboard</h1>
 
-        <!-- Pending Service Requests Table -->
         <div v-if="pendingRequests.length > 0">
             <h2>Pending Service Requests</h2>
             <table class="table">
@@ -107,7 +123,6 @@ export default {
         </div>
         <p v-else>No pending requests yet.</p>
 
-        <!-- Assigned Service Requests Table -->
         <div v-if="assignedRequests.length > 0">
             <h2>Assigned Service Requests</h2>
             <table class="table">
@@ -129,6 +144,12 @@ export default {
                         <td>{{ request.address }}</td>
                         <td>{{ request.pincode }}</td>
                         <td>
+                            <button class="btn btn-success" @click="closeRequest(request.id)">
+                                Close
+                            </button>
+                        </td>
+
+                        <td>
                             <button class="btn btn-danger" @click="rejectRequest(request.id)">
                                 Reject
                             </button>
@@ -139,7 +160,6 @@ export default {
         </div>
         <p v-else>No assigned requests yet.</p>
 
-        <!-- Completed Service Requests Table -->
         <div v-if="completedRequests.length > 0">
             <h2>Completed Service Requests</h2>
             <table class="table">
@@ -181,16 +201,10 @@ export default {
     border-collapse: collapse;
 }
 .btn-danger {
-    background-color: red;
-    color: white;
-    border: none;
     padding: 5px 10px;
     cursor: pointer;
 }
 .btn-success {
-    background-color: green;
-    color: white;
-    border: none;
     padding: 5px 10px;
     margin-right: 5px;
     cursor: pointer;

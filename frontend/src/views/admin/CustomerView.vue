@@ -4,7 +4,7 @@
 <template>
     <div>
       <div class="d-flex justify-content-center my-3">
-      <input type="text" v-model="searchQuery" class="form-control mb-3" placeholder="Search by name..." style="max-width: 300px"/>
+      <input type="text" v-model="searchQuery" class="form-control mb-3" placeholder="Search by name" style="max-width: 300px"/>
     </div>
     <table class="table">
       <thead>
@@ -44,7 +44,7 @@
             },
             data() {
                 return {
-                    searchQuery: "",  // Stores user input for searching
+                    searchQuery: "",  
                 } 
             },
             computed: {
@@ -65,7 +65,6 @@
                 }).then(x =>{
                     if(x.status == 200){
                         store.dispatch("getCustomers");
-    
                     }
                 })
                 }

@@ -5,6 +5,8 @@ export default {
     data() {
         return {
             serviceRequests: [],
+            filteredRequests: [],
+            selectedStatus: "All", 
         };
     },
     created() {
@@ -21,8 +23,17 @@ export default {
             .then(response => response.json())
             .then(data => {
                 this.serviceRequests = data;
+                this.filterRequests(); 
             })
             .catch(error => console.error("Error fetching service requests:", error));
+        },
+        filterRequests() {
+            if (this.selectedStatus === "All") {
+                this.filteredRequests = this.serviceRequests;
+            } else {
+                this.filteredRequests = this.serviceRequests.filter(request => 
+                    request.service_status === this.selectedStatus);
+            }
         }
     }
 };
@@ -32,7 +43,17 @@ export default {
     <div class="admin-dashboard">
         <h1>Welcome Admin: Thanos</h1>
 
-        <div v-if="serviceRequests.length > 0">
+        <div class="filter-container">
+            <label for="statusFilter">Search:</label>
+            <select v-model="selectedStatus" @change="filterRequests">
+                <option value="All">All</option>
+                <option value="pending">Pending</option>
+                <option value="assigned">Assigned</option>
+                <option value="completed">Completed</option>
+            </select>
+        </div>
+
+        <div v-if="filteredRequests.length > 0">
             <h2>All Service Requests</h2>
             <table class="table">
                 <thead>
@@ -47,7 +68,7 @@ export default {
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="(request, index) in serviceRequests" :key="request.id">
+                    <tr v-for="(request, index) in filteredRequests" :key="request.id">
                         <td>{{ index + 1 }}</td>
                         <td>{{ request.id }}</td>
                         <td>{{ request.service_name }}</td>
@@ -55,7 +76,6 @@ export default {
                         <td>{{ request.professional_id }}</td>
                         <td>{{ request.date_of_request }}</td>
                         <td>{{ request.service_status }}</td>
-                    
                     </tr>
                 </tbody>
             </table>
@@ -69,6 +89,17 @@ export default {
     width: 80%;
     margin: auto;
     padding: 20px;
+}
+.filter-container {
+    margin-bottom: 15px;
+}
+.filter-container label {
+    font-weight: bold;
+    margin-right: 10px;
+}
+.filter-container select {
+    padding: 5px;
+    font-size: 16px;
 }
 .table {
     width: 100%;

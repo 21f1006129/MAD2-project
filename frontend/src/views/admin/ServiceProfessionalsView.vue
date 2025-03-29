@@ -23,16 +23,15 @@
           <td>{{service_professional['service_type']}}</td>
           <td>{{ Number(service_professional['cumulative_rating']).toFixed(2) }}</td>
           <td>{{ service_professional['active'] === false ? 'Not Active' : 'Active' }}</td>
+
           <td>
             <button :class="service_professional['active'] === false ? 'btn btn-success' : 'btn btn-danger'"
             @click="status_change(service_professional['id'])">
                 {{ service_professional['active'] === false ? 'Activate' : 'Deactivate' }}
                 </button>
-
           </td>
-    
+
         </tr> 
-    
       </tbody>
     </table>
   </div>
@@ -46,7 +45,7 @@
             },
             data() {
                 return {
-                    searchQuery: "",  // Stores user input for searching
+                    searchQuery: "",  
                 } 
             },
             computed: {
@@ -67,7 +66,6 @@
                 }).then(x =>{
                     if(x.status == 200){
                         store.dispatch("getServiceProfessionals");
-    
                     }
                 })
                 }

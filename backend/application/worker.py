@@ -4,20 +4,12 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import  MIMEText
 from jinja2 import Template
 from datetime import datetime,timedelta
-import time
-import os
 from csv import DictWriter
 from io import StringIO
 
 
 from application.models import User,Servicerequest,Serviceprofessional, Customer
 
-@shared_task
-def hello():
-    print('start')
-    time.sleep(10)
-    print('end')
-    return "Hello My boy!!"
 
 @shared_task
 def daily_reminder():

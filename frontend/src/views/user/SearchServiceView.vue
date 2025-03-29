@@ -5,17 +5,17 @@
 <template>
   <div>
   <div class="d-flex justify-content-center my-3">
-      <!-- 🔽 Dropdown to select search type -->
+
       <select v-model="searchType" class="form-select search-dropdown">
           <option value="service_name">Service Name</option>
           <option value="pincode">Pin Code</option>
       </select>
 
-      <!-- 🔍 Search Input -->
-      <input type="text" v-model="searchQuery" class="form-control search-input" placeholder="Enter search query..." style="max-width: 300px; margin-left: 10px"/>
+    
+      <input type="text" v-model="searchQuery" class="form-control search-input" placeholder="Enter search query" style="max-width: 300px; margin-left: 10px"/>
   </div>
 
-  <!-- 📋 Table of Services -->
+  
   <table class="table">
       <thead>
           <tr>
@@ -52,14 +52,14 @@ export default {
     },
     data() {
         return {
-            searchQuery: "",  // User input for search
-            searchType: "service_name"  // Default search type
+            searchQuery: "",  
+            searchType: "service_name"  
         };
     },
     computed: {
         filteredServices() {
             const query = this.searchQuery.trim();
-            if (!query) return this.$store.getters.getServices; // Show all if empty
+            if (!query) return this.$store.getters.getServices;
 
             return this.searchType === "service_name"
                 ? this.filterByServiceName(query)
@@ -73,7 +73,7 @@ export default {
             );
         },
         filterByPincode(pincode) {
-            if (!/^\d{6}$/.test(pincode)) return []; // Validate it's a 6-digit pin
+            if (!/^\d{6}$/.test(pincode)) return []; 
 
             const professionals = this.$store.getters.getServiceProfessionals.filter(prof => 
                 prof.pincode == pincode && prof.active == 1

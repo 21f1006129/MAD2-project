@@ -3,36 +3,36 @@
     import router from '@/router';
 </script>
 <template>
-<table class="table">
-  <thead>
-    <tr>
-      <th scope="col">#</th>
-      <th scope="col">Name</th>
-      <th scope="col">Price</th>
-      <th scope="col">Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr v-for="(service,index) in store.getters.getServices" :key="index">
-      <th scope="row">{{ index+1 }}</th>
-      <td>{{service['name']}}</td>
-      <td>{{service['price']}}</td>
-      <td>{{ service['description'] }}</td>
-      <td>
-        <button class="btn btn-primary" @click="redirect( service['id'] )">
-          Edit
-        </button>
-      </td>
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Name</th>
+        <th scope="col">Price</th>
+        <th scope="col">Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="(service,index) in store.getters.getServices" :key="index">
+        <th scope="row">{{ index+1 }}</th>
+        <td>{{service['name']}}</td>
+        <td>{{service['price']}}</td>
+        <td>{{ service['description'] }}</td>
+        <td>
+          <button class="btn btn-primary" @click="redirect( service['id'] )">
+            Edit
+          </button>
+        </td>
 
-      <td>
-        <button class="btn btn-danger" @click="delete_service( service['id'] )">
-          Delete
-        </button>
-      </td>
-    </tr> 
+        <td>
+          <button class="btn btn-danger" @click="delete_service( service['id'] )">
+            Delete
+          </button>
+        </td>
+      </tr> 
 
-  </tbody>
-</table>
+    </tbody>
+  </table>
 </template>
 
 <script>

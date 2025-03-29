@@ -16,8 +16,6 @@ api = Blueprint('api',__name__)
 
 
 ### Login api Implementation ###
-
-
 @api.route("/signin",methods = ['POST'])
 def signin():
     username = request.json.get('username')
@@ -44,7 +42,7 @@ def signin():
     return {'token':user.get_auth_token(),
         'role': user.get_role()}
 
-### Signup Api Implementation ###
+### User Signup Api Implementation ###
 @api.route("/signup",methods = ['POST'])
 def signup():
     fullname = request.json.get('fullname')
@@ -78,7 +76,8 @@ def signup():
 
     return json.dumps({'message':'Successful!'}),200
 
-@api.route("/servicepro-signup", methods=["POST"])
+### Service Professional Signup Api Implementation ###
+@api.route("/servicepro_signup", methods=["POST"])
 def servicepro_signup():
     fullname = request.form.get('fullname')
     username = request.form.get('username')
@@ -87,11 +86,9 @@ def servicepro_signup():
     service_type = request.form.get('service_type')
     pdf_file = request.files.get('pdfFile')  
 
-    # Input validation
     if not fullname or not username or not password or not pincode or not service_type or not pdf_file:
         return json.dumps({'message': 'All fields including PDF file are required.'}), 400
 
-    # Check if user already exists
     if app.security.datastore.find_user(username=username):
         return json.dumps({'message': "Username already exists."}), 409
 
@@ -100,9 +97,8 @@ def servicepro_signup():
     os.makedirs(upload_folder, exist_ok=True)  
     pdf_filename = f"{username}_{pdf_file.filename}"
     pdf_path = os.path.join(upload_folder, pdf_filename)
-    pdf_file.save(pdf_path)  # Save the file
+    pdf_file.save(pdf_path)  
 
-    # Create user and hash password
     user = app.security.datastore.create_user(
         name=fullname,
         username=username,
@@ -110,7 +106,6 @@ def servicepro_signup():
         active=0
     )
 
-    # Assign 'service_professional' role
     service_pro_role = app.security.datastore.find_role('service_professional')
 
     app.security.datastore.add_role_to_user(user, service_pro_role)
@@ -132,8 +127,8 @@ def servicepro_signup():
 
     return json.dumps({'message': 'Service professional signup successful!'}), 200
 
-### Read Service API ###
 
+### Read Service API ###
 @api.route("/service", methods=["GET"])
 @cache.cached(30)
 def get_service():
@@ -196,6 +191,7 @@ def update_service():
     db.session.commit()
     return {'message': 'Service creation Successful'}, 200
 
+
 ### Delete Service API ###
 @api.route("/service/delete/<int:service_id>",methods=["DELETE"])
 @auth_required("token")
@@ -209,6 +205,7 @@ def delete_service(service_id):
     db.session.commit()
     return {'message':"Successfully Deleted"}, 200
 
+### Get Service Requests Api ###
 @api.route("/service_requests/all", methods=["GET"])
 @auth_required("token")
 @roles_required("admin")
@@ -228,6 +225,7 @@ def get_admin_service_requests():
         })
     return (result), 200
 
+### Get Service Professionals Api ###
 @api.route("/service_professionals", methods=["GET"])
 @auth_required("token")
 @roles_accepted("admin","user")
@@ -244,7 +242,7 @@ def get_service_professionals():
         }) 
     return result, 200 
 
-
+### Patch/Update Service Professionals - active status Api ###
 @api.route("/service_professionals/status/<int:id>", methods=["PATCH"])
 @auth_required("token")
 @roles_required("admin")
@@ -254,15 +252,14 @@ def toggle_service_professional_status(id):
     if not service_pro:
         return json.dumps({"message": "Service Professional not found"}), 404
 
-    # Toggle active status
     user = User.query.filter_by(username=service_pro.username).first()
-    service_pro.active = not service_pro.active  # Switch between True and False
+    service_pro.active = not service_pro.active  
     user.active = not user.active
 
-    db.session.commit()  # Save changes
+    db.session.commit() 
     return json.dumps({"message": "Status updated successfully", "active": service_pro.active}), 200
 
-
+### Get Customers Api ###
 @api.route("/customers", methods=["GET"])
 @auth_required("token")
 @roles_required("admin")
@@ -277,6 +274,7 @@ def get_customers():
         }) 
     return result, 200 
 
+### Patch/Update Customer - active status Api ###
 @api.route("/customers/status/<int:id>", methods=["PATCH"])
 @auth_required("token")
 @roles_required("admin")
@@ -286,16 +284,15 @@ def toggle_customer_status(id):
     if not customer:
         return json.dumps({"message": "Customer not found"}), 404
 
-    # Toggle active status
     user = User.query.filter_by(username=customer.username).first()
-    customer.active = not customer.active  # Switch between True and False
+    customer.active = not customer.active 
     user.active = not user.active
 
-    db.session.commit()  # Save changes
+    db.session.commit()
     return json.dumps({"message": "Status updated successfully", "active": customer.active}), 200
 
 
-#Get service requests
+### Get Service Requests for Professionals API ###
 @api.route("/service_requests/professional", methods=["GET"])
 @auth_required("token")
 @roles_required("service_professional")
@@ -317,8 +314,7 @@ def get_professional_requests():
     return (result), 200
 
 
-#Booking a Service
-
+### Booking a Service for User API###
 @api.route("/book_service", methods=["POST"])
 @auth_required("token")
 @roles_required("user")
@@ -331,13 +327,11 @@ def book_service():
     total_amount = request.json.get("total_amount")
     user_id = current_user.id
 
-    # Find available professionals
     professionals = Serviceprofessional.query.filter_by(pincode=pincode, service_type=service_type).all()
 
     if not professionals:
         return json.dumps({"message": "No service professionals available in this area."}), 409
 
-    # Sort by least assignments for the selected date
     professionals.sort(key=lambda p: len([r for r in p.requests_on_date if str(r.date_of_request) == str(date)]))
 
     for professional in professionals:
@@ -358,7 +352,7 @@ def book_service():
 
     return json.dumps({"message": "All professionals rejected or unavailable. Please try another date."}), 400
 
-# Service professional Accepts a service request
+### Patch/Update Service professional Accepts Service Request API###
 @api.route("/accept_service/<int:request_id>", methods=["PATCH"])
 @auth_required("token")
 @roles_required("service_professional")
@@ -372,7 +366,7 @@ def accept_service(request_id):
 
     return json.dumps({"message": "Service request accepted."}), 200
 
-# Service professional Rejecting a service request
+###Patch/Update Service professional Rejects a Service Request API###
 @api.route("/reject_service/<int:request_id>", methods=["PATCH"])
 @auth_required("token")
 @roles_required("service_professional")
@@ -381,9 +375,8 @@ def reject_service(request_id):
     if not request_entry:
         return json.dumps({"message": "Request not found"}), 404
 
-    # Add current professional ID to rejected_by list
     service_professional = Serviceprofessional.query.filter_by(username=current_user.username).first()
-    updated_rejected_list = request_entry.rejected_by + [service_professional.id]  # Create a new list
+    updated_rejected_list = request_entry.rejected_by + [service_professional.id] 
     request_entry.rejected_by = updated_rejected_list
     request_entry.service_status = "pending"
     db.session.commit()
@@ -395,25 +388,26 @@ def reassign_service(request_entry):
     pincode = request_entry.pincode
     service_name = request_entry.service_name
     date = request_entry.date_of_request
-    # Get all professionals in the same pincode & service type
+
     professionals = Serviceprofessional.query.filter_by(pincode=pincode, service_type=service_name).all()
 
-    # Sort by least requests and exclude those who rejected
+
     professionals = sorted(professionals, key=lambda p: len([r for r in p.requests_on_date if r.date_of_request == date]))
     available_professionals = [p for p in professionals if p.id not in request_entry.rejected_by and p.active]
     if available_professionals:
-        new_professional = available_professionals[0]  # Pick the least busy available professional
+        new_professional = available_professionals[0]  
         request_entry.professional_id = new_professional.id
-        request_entry.status = "pending"  # Set status back to pending
+        request_entry.status = "pending" 
         db.session.commit()
         return json.dumps({"message": f"Reassigned to {new_professional.name}", "professional_id": new_professional.id}), 200
     else:
         request_entry.professional_id = None
         db.session.commit()
 
-    # If no professionals left, notify customer
+
     return json.dumps({"message": "All professionals rejected this request."}), 400
 
+### GET Service requests User API ###
 @api.route("/service_requests/user", methods=["GET"])
 @auth_required("token")
 @roles_required("user")
@@ -430,13 +424,15 @@ def get_user_requests():
             "address": req.address,
             "pincode": req.pincode,
             "service_status": req.service_status,
+            "rating": req.rating,
             "feedback": req.feedback
         })
     return (result), 200
 
-@api.route("/close-service/<int:request_id>", methods=["PATCH"])
+### Patch/Update Closing a Service request API ###
+@api.route("/close_service/<int:request_id>", methods=["PATCH"])
 @auth_required("token")
-@roles_required("user")
+@roles_accepted("user","service_professional")
 def close_service(request_id):
     request_entry = Servicerequest.query.get(request_id)
     if not request_entry:
@@ -448,7 +444,7 @@ def close_service(request_id):
 
     return json.dumps({"message": "Service request marked as completed."}), 200
 
-
+### Delete a Service request by User API ###
 @api.route("/delete_service_request/<int:request_id>", methods=["DELETE"])
 @auth_required("token")
 @roles_required("user")
@@ -462,6 +458,7 @@ def delete_service_request(request_id):
 
     return json.dumps({"message": "Service request deleted. Please book again."}), 200
 
+### Get Service request to update Feedback API ###
 @api.route("/service_request/<int:request_id>", methods=["GET"])
 @auth_required("token")
 @roles_required("user")
@@ -475,7 +472,8 @@ def get_service_request(request_id):
         "service_name": request.service_name
     }), 200
 
-@api.route("/submit-feedback/<int:request_id>", methods=["PATCH"])
+### Patch/Update Service request to update Feedback API ###
+@api.route("/submit_feedback/<int:request_id>", methods=["PATCH"])
 @auth_required("token")
 @roles_required("user")
 def submit_feedback(request_id):

@@ -3,7 +3,7 @@ import store from '@/store';
 import router from '@/router';
 
 export default {
-    props: ['id'], // Service request ID from the route
+    props: ['id'], 
     data() {
         return {
             service_name: "",
@@ -16,7 +16,7 @@ export default {
     },
     methods: {
         fetchServiceDetails() {
-            fetch(`${import.meta.env.VITE_BASEURL}/service_request/${this.id}`, {
+            fetch(import.meta.env.VITE_BASEURL+`/service_request/${this.id}`, {
                 method: "GET",
                 headers: {
                     "Authentication-Token": store.getters.getToken
@@ -39,7 +39,7 @@ export default {
                 feedback: this.feedback
             };
 
-            fetch(`${import.meta.env.VITE_BASEURL}/submit-feedback/${this.id}`, {
+            fetch(import.meta.env.VITE_BASEURL+`/submit_feedback/${this.id}`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
@@ -49,8 +49,9 @@ export default {
             })
             .then(response => response.json())
             .then(data => {
+                console.log(data["message"])
                 alert("Feedback submitted successfully!");
-                router.push("/user"); //  Redirect to dashboard after submission
+                router.push("/user"); 
             })
             .catch(error => {
                 console.error("Error submitting feedback:", error);

@@ -47,7 +47,7 @@ export default {
     },
     computed: {
         service() {
-            return this.$store.getters.getServices.find(s => s.id === parseInt(this.id)) || null;
+            return this.$store.getters.getServices.find(service => service.id === parseInt(this.id)) || null;
         }
     },
     watch: {
@@ -87,8 +87,9 @@ export default {
                 },
                 body: JSON.stringify(bookingDetails)
             }).then(resp=>{
-                console.log("this step")
+        
                 return [resp.json(),resp.status]
+
             }).then(x=>{
                 if(x[1]==200){
                     alert("Booking Successful.")

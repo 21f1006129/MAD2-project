@@ -74,10 +74,25 @@ import router from '../router/index.js'
         },
         methods:{
             validate(){
-                console.log(this.username, this.password);
+                this.message = null;
+                this.message1 = null;
+
+            
+                if (!this.fullname || !this.username || !this.password || !this.confirm_password) {
+                    this.message1 = 'Please fill all the required fields.';
+                    return false; 
+                }
+
+                
+                if (this.password !== this.confirm_password) {
+                    this.message1 = "Passwords don't match.";
+                    return false;
+                }
+                console.log(this.username);
+                return true
             },
             signup(){
-                this.validate();
+                if(this.validate()){
                 fetch(import.meta.env.VITE_BASEURL+'/signup',{method:'POST',headers: {"Content-Type":"application/json"},
                 body : JSON.stringify({fullname : this.fullname ,username: this.username, password: this.password, })
 
@@ -111,7 +126,7 @@ import router from '../router/index.js'
                         router.push({path:"/signup"})
                     }
                 })
-                
+            }
                 }  
         },
         computed:{

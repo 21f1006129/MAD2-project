@@ -22,14 +22,14 @@ export default {
             })
             .then(response => response.json())
             .then(data => {
-                //  Filter requests based on status
+                
                 this.pendingRequests = data.filter(req => req.service_status === "pending" || req.service_status === "assigned");
                 this.completedRequests = data.filter(req => req.service_status === "completed");
             })
             .catch(error => console.error("Error fetching service requests:", error));
         },
-        closeRequest(requestId) {
-            fetch(`${import.meta.env.VITE_BASEURL}/close-service/${requestId}`, {
+        closeRequest(id) {
+            fetch(import.meta.env.VITE_BASEURL+`/close_service/${id}`, {
                 method: "PATCH",
                 headers: {
                     "Authentication-Token": store.getters.getToken
@@ -38,15 +38,15 @@ export default {
             .then(response => response.json())
             .then(data => {
                 alert(data.message);
-                router.push(`/user/feedback/${requestId}`); //  Redirect to feedback service_request page.
+                router.push(`/user/feedback/${requestId}`); 
             })
             .catch(error => {
                 console.error("Error closing service request:", error);
                 alert("Error closing service request. Please try again.");
             });
         },
-        bookAgain(requestId) {
-            fetch(`${import.meta.env.VITE_BASEURL}/delete_service_request/${requestId}`, {
+        bookAgain(id) {
+            fetch(import.meta.env.VITE_BASEURL+`/delete_service_request/${id}`, {
                 method: "DELETE",
                 headers: {
                     "Authentication-Token": store.getters.getToken
@@ -55,15 +55,15 @@ export default {
             .then(response => response.json())
             .then(data => {
                 alert(data.message);
-                router.push("/user/search"); //  Redirect to search page
+                router.push("/user/search"); 
             })
             .catch(error => {
                 console.error("Error deleting request:", error);
                 alert("Error deleting request. Please try again.");
             });
         },
-        cancelRequest(requestId) {
-            fetch(`${import.meta.env.VITE_BASEURL}/delete_service_request/${requestId}`, {
+        cancelRequest(id) {
+            fetch(import.meta.env.VITE_BASEURL+`/delete_service_request/${id}`, {
                 method: "DELETE",
                 headers: {
                     "Authentication-Token": store.getters.getToken
@@ -72,12 +72,15 @@ export default {
             .then(response => response.json())
             .then(data => {
                 alert(data.message);
-                this.fetchServiceRequests(); //  Refresh table after deletion
+                this.fetchServiceRequests(); 
             })
             .catch(error => {
                 console.error("Error canceling request:", error);
                 alert("Error canceling request. Please try again.");
             });
+        },
+        rateService(id) {
+            router.push(`/user/feedback/${id}`);
         }
     }
 };
@@ -87,7 +90,7 @@ export default {
     <div class="dashboard-container">
         <h1>Welcome to Household Services, Book your service now.</h1>
 
-        <!-- Pending Service Requests Table -->
+        
         <div v-if="pendingRequests.length > 0">
             <h2>Pending Service Requests</h2>
             <table class="table">
@@ -130,7 +133,7 @@ export default {
         </div>
         <p v-else>No pending requests yet.</p>
 
-        <!-- Completed Service Requests Table -->
+        
         <div v-if="completedRequests.length > 0">
             <h2>Completed Service Requests</h2>
             <table class="table">
@@ -154,6 +157,11 @@ export default {
                         <td>{{ request.address }}</td>
                         <td>{{ request.pincode }}</td>
                         <td>{{ request.feedback || "No feedback given" }}</td>
+                        <td>
+                            <button class="btn btn-primary" v-if="request.rating == null" @click="rateService(request.id)">
+                                Rate this service
+                            </button>
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -174,9 +182,6 @@ export default {
     border-collapse: collapse;
 }
 .btn-success {
-    background-color: green;
-    color: white;
-    border: none;
     padding: 5px 10px;
     cursor: pointer;
 }

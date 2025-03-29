@@ -46,7 +46,7 @@ import router from '../router/index.js'
                     </div>
                 </div>
                 <div class="row">
-                    <p>Select Service Type</p>
+                    <p>Select Service Type :</p>
                     <select class="form-select form-select-sm" v-model ="service_type" aria-label="Small select example">
                         <option v-for="(service, index) in store.getters.getServices" :key="index" :value="service.name">
                             {{ service.name }}
@@ -55,6 +55,7 @@ import router from '../router/index.js'
 
                 </div>
                 <div class="row">
+                    <p>Add a Verification PDF :</p>
                     <div class="col">
                         <input type="file" ref="pdf_input" class="form-control" @change="handleFileUpload" accept="application/pdf" required>
                     </div>
@@ -106,31 +107,31 @@ import router from '../router/index.js'
                 this.message = null;
                 this.message1 = null;
 
-                // Check for empty fields
+            
                 if (!this.fullname || !this.username || !this.password || !this.confirm_password || !this.pincode || !this.service_type) {
                     this.message1 = 'Please fill all the required fields.';
-                    return false; // Stop form submission
+                    return false; 
                 }
 
-                // Check if passwords match
+                
                 if (this.password !== this.confirm_password) {
                     this.message1 = "Passwords don't match.";
                     return false;
                 }
 
-                // Check if pincode is exactly 6 digits
+                
                 if (String(this.pincode).length !== 6) {
                     this.message1 = 'Pincode must be 6 digits long.';
                     return false;
                 }
 
-                // Check if PDF file is uploaded
+                
                 if (!this.pdfFile) {
                     this.message1 = 'Please upload a PDF file.';
                     return false;
                 }
 
-                // Optionally check if uploaded file is a PDF (MIME type check)
+    
                 if (this.pdfFile.type !== 'application/pdf') {
                     this.message1 = 'Uploaded file must be a PDF.';
                     return false;
@@ -152,7 +153,7 @@ import router from '../router/index.js'
                 console.log('Selected file:', this.pdfFile);
             },  
             signup() {
-                this.validate();
+                if(this.validate()){
                 
                 const formData = new FormData();
                 formData.append('fullname', this.fullname);
@@ -162,7 +163,7 @@ import router from '../router/index.js'
                 formData.append('service_type', this.service_type);
                 formData.append('pdfFile', this.pdfFile); 
 
-                fetch(import.meta.env.VITE_BASEURL + '/servicepro-signup', {
+                fetch(import.meta.env.VITE_BASEURL + '/servicepro_signup', {
                     method: 'POST',
                     body: formData 
                 })
@@ -175,21 +176,22 @@ import router from '../router/index.js'
                         this.message = 'Signup successful! Please login.';
                         this.pdfFile = null;
                         this.resetForm();
-                        router.push({ path: "/servicepro-signup" });
+                        router.push({ path: "/servicepro_signup" });
                     } else if (status ===409) {
                         this.message = null;
                         this.message1 = 'Username already Exists.';
                         this.resetForm();
-                        router.push({ path: "/servicepro-signup" });
+                        router.push({ path: "/servicepro_signup" });
                     
                     }else {
                         this.message = null;
                         this.message1 = 'Invalid Form Response';
                         this.resetForm();
-                        router.push({ path: "/servicepro-signup" });
+                        router.push({ path: "/servicepro_signup" });
                     }
                 });
             }
+        }
         },
         computed:{
             toggle(){

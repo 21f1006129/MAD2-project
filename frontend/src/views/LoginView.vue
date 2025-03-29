@@ -13,7 +13,7 @@ import router from '@/router';
              <div class="card-body">
                 <h4 class="'card-title'">Login</h4>
                 <form @submit.prevent="login()">
-                    <p style="color: red;">{{ error['username'] }}</p>
+                    <p style="color: red;">{{ error }}</p>
                 <div class="row">
                     <div class="col">
                     <input type="text" class="form-control" v-model="username" placeholder="username" aria-label="username" required>
@@ -49,51 +49,49 @@ import router from '@/router';
             return {
                 username : null,
                 password : null,
-                error : {
-                    username : null,
-                    password : null
-                }
+                error : null
             }
         },
         methods:{
             validate(){
-                console.log(this.username, this.password);
+                if(!this.username || !this.password){
+                    return false
+                }
+                console.log(this.username);
+                return true
             },
             login(){
-                this.validate();
-            fetch(import.meta.env.VITE_BASEURL+'/signin', {method:"POST",
-            headers: {"Content-Type":"application/json"},
-            body : JSON.stringify({username: this.username, password: this.password})
-            }).then(resp => {
-                return [resp.json(),resp.status]
-            }).then(x => {
-                if(x[1] == 200){
-                    return x[0]
-                }
-                else if (x[1] == 404 || x[1]==400){
-                    this.error = {
-                        username: "Invalid username or password",
-                        password: "Invalid username or password"
-                    }
-                }
-                else{
-                    this.error = {
-                        username: "This account is temporarily Deactivated"
-                    }
-                }
-                return {token: null,role:[]}
-            }).then(x=> {
-                console.log(x['role'])
-                store.commit("setUser",x);
-                if(x['role'].includes('admin')){
-                    router.push({path:"/admin"})
-                } else if (x['role'].includes('user')){
-                    router.push({path:"/user"})
-                } else {
-                    router.push({path:"/service_professional"})
-                }
+                if(this.validate()){
+                    fetch(import.meta.env.VITE_BASEURL+'/signin', {method:"POST",
+                    headers: {"Content-Type":"application/json"},
+                    body : JSON.stringify({username: this.username, password: this.password})
+                    }).then(resp => {
+                        return [resp.json(),resp.status]
+                    }).then(x => {
+                        if(x[1] == 200){
+                            return x[0]
+                        }
+                        else if (x[1] == 404 || x[1]==400){
+                            this.error = "Invalid username or password"
+                        }
+                        else{
+                            this.error = "This account is Not activated"
+                            
+                        }
+                        return {token: null,role:[]}
+                    }).then(x=> {
+                        console.log(x['role'])
+                        store.commit("setUser",x);
+                        if(x['role'].includes('admin')){
+                            router.push({path:"/admin"})
+                        } else if (x['role'].includes('user')){
+                            router.push({path:"/user"})
+                        } else {
+                            router.push({path:"/service_professional"})
+                        }
 
-            })
+                    })
+        }
             }
         }
      }

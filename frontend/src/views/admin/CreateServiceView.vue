@@ -4,62 +4,62 @@ import router from "@/router";
 </script>
 <template>
     <div>
-    <div class="card" >
-        <h6 style="color:crimson;text-align: center">{{ error_message }}</h6>
-        <div class="card-body">
-            <h5 class="card-title">Create New Service</h5>
-            <form @submit.prevent="submit()">
-                <div class="row">
-                    <div class="col">
-                    <input type="text" class="form-control" v-model = "servicename" placeholder="Servicename" aria-label="Servicename" required>
+        <div class="card" v-if="id">
+            <div class="card-body">
+                <h5 class="card-title">Edit Service</h5>
+                <form @submit.prevent="update()">
+                    <div class="row">
+                        <div class="col">
+                        <input type="text" class="form-control" v-model = "editservicename" placeholder="Servicename" aria-label="Servicename" required>
+                        </div>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col">
-                    <input type="text" class="form-control" v-model="description" placeholder="Description" aria-label="Description" required>
+                    <div class="row">
+                        <div class="col">
+                        <input type="text" class="form-control" v-model="editdescription" placeholder="Description" aria-label="Description" required>
+                        </div>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col">
-                    <input type="number" min="100" max="10000" class="form-control" v-model="baseprice" placeholder="baseprice" aria-label="baseprice" >
+                    <div class="row">
+                        <div class="col">
+                        <input type="number" min="100" max="10000" class="form-control" v-model="editbaseprice" placeholder="baseprice" aria-label="baseprice"  required>
+                        </div>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col">
-                    <input type="submit" class="btn btn-primary" value="Create">
+                    <div class="row">
+                        <div class="col">
+                        <input type="submit" class="btn btn-primary" value="Update">
+                        </div>
                     </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
-    </div>
 
-    <div class="card" v-if="id">
-        <div class="card-body">
-            <h5 class="card-title">Edit Service</h5>
-            <form @submit.prevent="update()">
-                <div class="row">
-                    <div class="col">
-                    <input type="text" class="form-control" v-model = "editservicename" placeholder="Servicename" aria-label="Servicename" required>
+        <div class="card" v-else>
+            <h6 style="color:crimson;text-align: center">{{ error_message }}</h6>
+            <div class="card-body">
+                <h5 class="card-title">Create New Service</h5>
+                <form @submit.prevent="submit()">
+                    <div class="row">
+                        <div class="col">
+                        <input type="text" class="form-control" v-model = "servicename" placeholder="Servicename" aria-label="Servicename" required>
+                        </div>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col">
-                    <input type="text" class="form-control" v-model="editdescription" placeholder="Description" aria-label="Description" required>
+                    <div class="row">
+                        <div class="col">
+                        <input type="text" class="form-control" v-model="description" placeholder="Description" aria-label="Description" required>
+                        </div>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col">
-                    <input type="number" min="100" max="10000" class="form-control" v-model="editbaseprice" placeholder="baseprice" aria-label="baseprice"  required>
+                    <div class="row">
+                        <div class="col">
+                        <input type="number" min="100" max="10000" class="form-control" v-model="baseprice" placeholder="baseprice" aria-label="baseprice" >
+                        </div>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col">
-                    <input type="submit" class="btn btn-primary" value="Update">
+                    <div class="row">
+                        <div class="col">
+                        <input type="submit" class="btn btn-primary" value="Create">
+                        </div>
                     </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
-    </div>
 
 </div>
 </template>
@@ -75,10 +75,7 @@ export default {
             baseprice: null,
             editservicename: null,
             editdescription:null,
-            editbaseprice:null,
-            error:{
-                mesasge:null
-            }
+            editbaseprice:null
         }
 
     },
@@ -92,6 +89,7 @@ export default {
     },
     created(){
         store.dispatch("getServices");
+
     },
     computed: {
         service() {
@@ -107,10 +105,14 @@ export default {
     methods:{
         validate(){ 
             console.log(this.servicename)
+            if(!this.servicename || !this.description || !this.baseprice){
+                return false
+            }
+            return true
 
         },
         submit(){
-            this.validate()
+            if(this.validate()){
             fetch(import.meta.env.VITE_BASEURL+"/service/create",{
                 method: 'POST',
                 headers: {
@@ -123,11 +125,11 @@ export default {
                     router.push("/admin/service/view")
                 }
                 else if(x.status == 409){
-                    this.error_message = "This Service name already exists";
-
+                    alert("This Service name already exists");
 
                 }
             })
+        }
         },
         update(){
             fetch(import.meta.env.VITE_BASEURL+"/service/update",{
