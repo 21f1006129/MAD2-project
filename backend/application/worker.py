@@ -47,7 +47,7 @@ def monthly_reminder():
     usernames = {customer.username for customer in customers}
 
     users = User.query.filter(User.username.in_(usernames)).all()
-
+    
     today = datetime.today()
     first_day_of_current_month = today.replace(day=1)
 
