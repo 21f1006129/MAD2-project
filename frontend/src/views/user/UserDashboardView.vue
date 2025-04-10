@@ -38,7 +38,7 @@ export default {
             .then(response => response.json())
             .then(data => {
                 alert(data.message);
-                router.push(`/user/feedback/${requestId}`); 
+                router.push(`/user/feedback/${id}`); 
             })
             .catch(error => {
                 console.error("Error closing service request:", error);
